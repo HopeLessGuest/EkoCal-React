@@ -1,5 +1,5 @@
 {
-  "name": "简约圆润日历-(minimalist-calendar)",
+  "name": "ekocal",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -16,5 +16,20 @@
     "@types/node": "^22.14.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
-  }
+  },
+  "description": "<<<<<<< HEAD\r # Run and deploy your AI Studio app",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HopeLessGuest/EkoCal-React.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/HopeLessGuest/EkoCal-React/issues"
+  },
+  "homepage": "https://github.com/HopeLessGuest/EkoCal-React#readme"
 }

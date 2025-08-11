@@ -10,7 +10,7 @@ import { Event, EventsStore, EventPayload, RecurrenceFrequency } from './lib/typ
 import { EventModal } from './components/modals/EventModal';
 import { SetReminderModal } from './components/modals/SetReminderModal';
 import { ConfirmDeleteModal } from './components/modals/ConfirmDeleteModal';
-import { CalendarIcon, ListBulletIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, Cog6ToothIcon } from './components/Icons';
+import { CalendarIcon, ListBulletIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, Cog6ToothIcon, MenuIcon } from './components/Icons';
 
 type View = 'calendar' | 'events' | 'settings';
 
@@ -80,6 +80,7 @@ const AppContent: React.FC = () => {
   const { t } = useLanguage();
   const { showNotification } = useNotification();
   const [view, setView] = useState<View>('calendar');
+  const [isNavOpen, setIsNavOpen] = useState(false);
 
   const [events, setEvents] = useState<EventsStore>(() => {
     try {
@@ -195,6 +196,11 @@ const AppContent: React.FC = () => {
     setActiveEvent(event);
     setIsReminderModalOpen(true);
   };
+  
+  const handleNavClick = (action: () => void) => {
+    action();
+    setIsNavOpen(false);
+  };
 
   const recentEvents = useMemo(() => {
     const sortedEvents = Object.values(events)
@@ -297,7 +303,19 @@ const AppContent: React.FC = () => {
 
 
   return (
-    <div className="flex w-full min-h-screen font-sans">
+    <div className="flex w-full min-h-screen font-sans bg-slate-100 dark:bg-slate-900">
+       {/* Backdrop for mobile nav */}
+       {isNavOpen && <div onClick={() => setIsNavOpen(false)} className="fixed inset-0 bg-black/50 z-20 md:hidden" />}
+
+        {/* Mobile Menu Button */}
+       <button 
+        onClick={() => setIsNavOpen(true)}
+        className="md:hidden fixed top-4 left-4 z-10 p-2 text-slate-600 dark:text-slate-300 bg-slate-100/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700"
+        aria-label="Open menu"
+      >
+        <MenuIcon className="w-6 h-6" />
+      </button>
+
        <input 
         type="file" 
         id="import-file-input" 
@@ -305,22 +323,22 @@ const AppContent: React.FC = () => {
         accept=".json" 
         onChange={handleImportEvents}
       />
-      <nav className="p-4 pt-8 sticky top-0 h-screen bg-slate-100 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 w-48 flex-shrink-0 flex flex-col">
+      <nav className={`fixed inset-y-0 left-0 z-30 p-4 pt-8 h-screen bg-slate-100 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 w-48 flex flex-col transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isNavOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <ul className="space-y-2 flex-grow">
           <li>
-            <button onClick={() => setView('calendar')} className={viewButtonClasses('calendar')} aria-current={view === 'calendar'}>
+            <button onClick={() => handleNavClick(() => setView('calendar'))} className={viewButtonClasses('calendar')} aria-current={view === 'calendar'}>
               <CalendarIcon className="w-5 h-5" />
               <span>{t('viewCalendar')}</span>
             </button>
           </li>
           <li>
-            <button onClick={() => setView('events')} className={viewButtonClasses('events')} aria-current={view === 'events'}>
+            <button onClick={() => handleNavClick(() => setView('events'))} className={viewButtonClasses('events')} aria-current={view === 'events'}>
               <ListBulletIcon className="w-5 h-5" />
               <span>{t('viewEvents')}</span>
             </button>
           </li>
           <li>
-            <button onClick={() => setView('settings')} className={viewButtonClasses('settings')} aria-current={view === 'settings'}>
+            <button onClick={() => handleNavClick(() => setView('settings'))} className={viewButtonClasses('settings')} aria-current={view === 'settings'}>
               <Cog6ToothIcon className="w-5 h-5" />
               <span>{t('viewSettings')}</span>
             </button>
@@ -328,13 +346,13 @@ const AppContent: React.FC = () => {
         </ul>
         <ul className="space-y-2 pt-4 border-t border-slate-200 dark:border-slate-700">
             <li>
-                <label htmlFor="import-file-input" className={actionButtonClasses}>
+                <label htmlFor="import-file-input" className={actionButtonClasses} onClick={() => setIsNavOpen(false)}>
                     <ArrowUpTrayIcon className="w-5 h-5" />
                     <span>{t('importEvents')}</span>
                 </label>
             </li>
             <li>
-                <button onClick={handleExportEvents} className={actionButtonClasses}>
+                <button onClick={() => handleNavClick(handleExportEvents)} className={actionButtonClasses}>
                     <ArrowDownTrayIcon className="w-5 h-5" />
                     <span>{t('exportEvents')}</span>
                 </button>
