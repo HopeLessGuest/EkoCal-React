@@ -1,0 +1,6 @@
+{
+  "name": "简约圆润日历 (Minimalist Calendar)",
+  "description": "一个基于React和Tailwind CSS构建的简约风格、圆润UI的日历应用。它提供了一个干净、美观的界面来查看日期。",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
