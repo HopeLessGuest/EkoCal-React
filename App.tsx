@@ -304,17 +304,19 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="flex w-full min-h-screen font-sans bg-slate-100 dark:bg-slate-900">
+       {/* Mobile App Bar */}
+       <header className="md:hidden fixed top-0 left-0 right-0 h-16 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-20 flex items-center px-4">
+        <button
+          onClick={() => setIsNavOpen(true)}
+          className="p-2 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700"
+          aria-label={t('menu')}
+        >
+          <MenuIcon className="w-6 h-6" />
+        </button>
+      </header>
+       
        {/* Backdrop for mobile nav */}
        {isNavOpen && <div onClick={() => setIsNavOpen(false)} className="fixed inset-0 bg-black/50 z-20 md:hidden" />}
-
-        {/* Mobile Menu Button */}
-       <button 
-        onClick={() => setIsNavOpen(true)}
-        className="md:hidden fixed top-4 left-4 z-10 p-2 text-slate-600 dark:text-slate-300 bg-slate-100/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700"
-        aria-label="Open menu"
-      >
-        <MenuIcon className="w-6 h-6" />
-      </button>
 
        <input 
         type="file" 
@@ -360,7 +362,7 @@ const AppContent: React.FC = () => {
         </ul>
       </nav>
 
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-6 pt-20 md:pt-6">
         <div className="w-full max-w-md mx-auto">
           {view === 'calendar' ? (
             <Calendar
