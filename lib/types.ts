@@ -49,3 +49,13 @@ export interface EventPayload {
   eventTimeRanges: TimeRange[];
   eventRecurrenceRule?: RecurrenceRule | null;
 }
+
+export enum NotificationMethod {
+    NONE = 'NONE',
+    WECOM = 'WECOM',
+}
+
+export interface Settings {
+    notificationMethod: NotificationMethod;
+    notificationRobotUrl: string;
+}

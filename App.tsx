@@ -6,11 +6,12 @@ import { SettingsView } from './components/SettingsView';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { NotificationProvider, useNotification } from './contexts/NotificationContext';
 import Notification from './components/Notification';
-import { Event, EventsStore, EventPayload, RecurrenceFrequency } from './lib/types';
+import { Event, EventsStore, EventPayload, RecurrenceFrequency, Settings, NotificationMethod } from './lib/types';
 import { EventModal } from './components/modals/EventModal';
 import { SetReminderModal } from './components/modals/SetReminderModal';
 import { ConfirmDeleteModal } from './components/modals/ConfirmDeleteModal';
 import { CalendarIcon, ListBulletIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, Cog6ToothIcon, MenuIcon } from './components/Icons';
+import { sendWeComNotification } from './lib/wecom';
 
 type View = 'calendar' | 'events' | 'settings';
 
@@ -77,7 +78,7 @@ const validateImportedData = (data: any): { valid: boolean; error: { key: string
 
 
 const AppContent: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { showNotification } = useNotification();
   const [view, setView] = useState<View>('calendar');
   const [isNavOpen, setIsNavOpen] = useState(false);
@@ -92,13 +93,17 @@ const AppContent: React.FC = () => {
     }
   });
 
-  const [settings, setSettings] = useState(() => {
+  const [settings, setSettings] = useState<Settings>(() => {
     try {
         const savedSettings = localStorage.getItem('calendarSettings');
-        return savedSettings ? JSON.parse(savedSettings) : { notificationRobotUrl: '' };
+        const parsed = savedSettings ? JSON.parse(savedSettings) : {};
+        return { 
+          notificationMethod: parsed.notificationMethod || NotificationMethod.NONE,
+          notificationRobotUrl: parsed.notificationRobotUrl || '' 
+        };
     } catch (error) {
         console.error("Failed to load settings from localStorage", error);
-        return { notificationRobotUrl: '' };
+        return { notificationMethod: NotificationMethod.NONE, notificationRobotUrl: '' };
     }
   });
 
@@ -174,7 +179,7 @@ const AppContent: React.FC = () => {
     showNotification(t('notificationReminderSet'), 'success');
   };
   
-  const handleSaveSettings = (newSettings: { notificationRobotUrl: string }) => {
+  const handleSaveSettings = (newSettings: Settings) => {
     setSettings(newSettings);
     showNotification(t('notificationSettingsSaved'), 'success');
   };
@@ -292,6 +297,62 @@ const AppContent: React.FC = () => {
     reader.readAsText(file);
 };
 
+  useEffect(() => {
+    const checkReminders = async () => {
+      let currentSettings: Settings;
+      try {
+        currentSettings = JSON.parse(localStorage.getItem('calendarSettings') || '{}');
+      } catch {
+        currentSettings = { notificationMethod: NotificationMethod.NONE, notificationRobotUrl: '' };
+      }
+
+      if (currentSettings.notificationMethod !== NotificationMethod.WECOM || !currentSettings.notificationRobotUrl) {
+        return;
+      }
+
+      const allEvents: EventsStore = JSON.parse(localStorage.getItem('calendarEvents') || '{}');
+      let sentReminders: Record<string, string> = {};
+      try {
+        sentReminders = JSON.parse(localStorage.getItem('sentReminders') || '{}');
+      } catch {
+        sentReminders = {};
+      }
+
+      const now = new Date();
+      let newSentReminders = { ...sentReminders };
+      let sentInThisCycle = false;
+
+      for (const eventId in allEvents) {
+        const event = allEvents[eventId];
+        if (event.eventReminder) {
+          const reminderTime = new Date(event.eventReminder);
+          if (reminderTime <= now && sentReminders[event.eventId] !== event.eventReminder) {
+            try {
+              await sendWeComNotification(currentSettings.notificationRobotUrl, event, t, language);
+
+              newSentReminders[event.eventId] = event.eventReminder;
+              sentInThisCycle = true;
+              showNotification(t('notificationSent') + `: ${event.eventTitle}`, 'success');
+
+            } catch (err) {
+              console.error(`Failed to send reminder for event ${event.eventId}:`, err);
+              showNotification(`${t('notificationSendFailed')}: ${event.eventTitle}`, 'error');
+            }
+          }
+        }
+      }
+
+      if (sentInThisCycle) {
+        localStorage.setItem('sentReminders', JSON.stringify(newSentReminders));
+      }
+    };
+
+    const intervalId = setInterval(checkReminders, 60000);
+    checkReminders(); 
+
+    return () => clearInterval(intervalId);
+  }, [t, showNotification, language]);
+
 
   const viewButtonClasses = (buttonView: View) => `flex items-center space-x-3 w-full p-3 rounded-lg text-sm font-semibold transition-colors ${
     view === buttonView
@@ -304,17 +365,6 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="flex w-full min-h-screen font-sans bg-slate-100 dark:bg-slate-900">
-       {/* Mobile App Bar */}
-       <header className="md:hidden fixed top-0 left-0 right-0 h-16 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-20 flex items-center px-4">
-        <button
-          onClick={() => setIsNavOpen(true)}
-          className="p-2 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700"
-          aria-label={t('menu')}
-        >
-          <MenuIcon className="w-6 h-6" />
-        </button>
-      </header>
-       
        {/* Backdrop for mobile nav */}
        {isNavOpen && <div onClick={() => setIsNavOpen(false)} className="fixed inset-0 bg-black/50 z-20 md:hidden" />}
 
@@ -362,28 +412,41 @@ const AppContent: React.FC = () => {
         </ul>
       </nav>
 
-      <main className="flex-1 p-6 pt-20 md:pt-6">
-        <div className="w-full max-w-md mx-auto">
-          {view === 'calendar' ? (
-            <Calendar
-              events={events}
-              onOpenAddModal={openAddModal}
-              onOpenEditModal={openEditModal}
-              onOpenReminderModal={openReminderModal}
-            />
-          ) : view === 'events' ? (
-            <EventsView
-              events={events}
-              onOpenEditModal={openEditModal}
-              onOpenReminderModal={openReminderModal}
-              onOpenAddModal={() => openAddModal(new Date())}
-            />
-          ) : (
-            <SettingsView
-              settings={settings}
-              onSave={handleSaveSettings}
-            />
-          )}
+      <main className="flex-1 flex flex-col">
+        {/* Mobile-only header */}
+        <div className="md:hidden px-4 py-2 flex items-center border-b border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900">
+            <button 
+                onClick={() => setIsNavOpen(true)}
+                className="p-2 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700"
+                aria-label={t('menu')}
+            >
+                <MenuIcon className="w-6 h-6" />
+            </button>
+        </div>
+        
+        <div className="flex-1 p-6 overflow-y-auto">
+            <div className="w-full max-w-md mx-auto">
+              {view === 'calendar' ? (
+                <Calendar
+                  events={events}
+                  onOpenAddModal={openAddModal}
+                  onOpenEditModal={openEditModal}
+                  onOpenReminderModal={openReminderModal}
+                />
+              ) : view === 'events' ? (
+                <EventsView
+                  events={events}
+                  onOpenEditModal={openEditModal}
+                  onOpenReminderModal={openReminderModal}
+                  onOpenAddModal={() => openAddModal(new Date())}
+                />
+              ) : (
+                <SettingsView
+                  settings={settings}
+                  onSave={handleSaveSettings}
+                />
+              )}
+            </div>
         </div>
       </main>
 

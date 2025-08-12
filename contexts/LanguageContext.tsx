@@ -76,10 +76,14 @@ const translations = {
   // Settings
   settingsTitle: { 'zh-CN': '通知设置', 'en-US': 'Notification Settings' },
   languageSettingTitle: { 'zh-CN': '语言设置', 'en-US': 'Language Settings' },
+  notificationMethod: { 'zh-CN': '通知方式', 'en-US': 'Notification Method' },
+  notificationMethodNone: { 'zh-CN': '无', 'en-US': 'None' },
+  notificationMethodWeCom: { 'zh-CN': '企业微信机器人', 'en-US': 'WeCom Robot' },
   notificationRobotUrl: { 'zh-CN': '通知机器人 URL', 'en-US': 'Notification Robot URL' },
   notificationRobotUrlPlaceholder: { 'zh-CN': '输入您的Webhook URL...', 'en-US': 'Enter your Webhook URL...' },
   currentUrl: { 'zh-CN': '当前链接', 'en-US': 'Current URL' },
   saveSettings: { 'zh-CN': '保存', 'en-US': 'Save' },
+  copy: { 'zh-CN': '复制', 'en-US': 'Copy' },
   // Import / Export
   exportEvents: { 'zh-CN': '导出事件', 'en-US': 'Export Events' },
   importEvents: { 'zh-CN': '导入事件', 'en-US': 'Import Events' },
@@ -91,9 +95,15 @@ const translations = {
   notificationEventUpdated: { 'zh-CN': '事件已更新', 'en-US': 'Event updated' },
   notificationEventDeleted: { 'zh-CN': '事件已删除', 'en-US': 'Event deleted' },
   notificationReminderSet: { 'zh-CN': '提醒已设置', 'en-US': 'Reminder set' },
+  notificationSent: { 'zh-CN': '提醒已发送', 'en-US': 'Reminder sent' },
+  notificationSendFailed: { 'zh-CN': '提醒发送失败', 'en-US': 'Failed to send reminder' },
   notificationExportSuccess: { 'zh-CN': '事件导出成功', 'en-US': 'Events exported successfully' },
   notificationExportNoEvents: { 'zh-CN': '没有可导出的事件', 'en-US': 'No events to export' },
   notificationImportFailed: { 'zh-CN': '导入失败', 'en-US': 'Import failed' },
+  // Webhook specific
+  reminderNotificationTitle: { 'zh-CN': '事件提醒: {title}', 'en-US': 'Event Reminder: {title}' },
+  reminderNotificationTime: { 'zh-CN': '时间', 'en-US': 'Time' },
+  reminderNotificationDesc: { 'zh-CN': '描述', 'en-US': 'Description' },
   // Errors
   errorTitleRequired: { 'zh-CN': '标题不能为空。', 'en-US': 'Title cannot be empty.' },
   errorDateRangeOrder: { 'zh-CN': '时间段的结束日期不能早于开始日期', 'en-US': 'A date range\'s end date cannot be earlier than its start date.' },
